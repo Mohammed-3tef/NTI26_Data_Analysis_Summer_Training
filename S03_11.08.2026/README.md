@@ -8,8 +8,6 @@ A comprehensive reference guide covering relation attributes, weak entity sets, 
 
 A **Relation** is a two-dimensional table composed of **Tuples** (rows) and **Attributes** (columns). Every attribute operates over an atomic **Domain** (the permitted set of values).
 
-### A. Attribute Types in Database Design
-
 | Attribute Type | ERD Notation | Relational Database Representation | Example |
 | --- | --- | --- | --- |
 | **Simple (Atomic)** | Oval | Becomes a standard column in the relation. | `salary` column in `Employee` |
@@ -20,35 +18,13 @@ A **Relation** is a two-dimensional table composed of **Tuples** (rows) and **At
 
 ---
 
-### B. The Key Hierarchy
-
-```mermaid
-flowchart TD
-    SK["<b>Super Keys</b>"]
-    CK["<b>Candidate Keys</b><br/><i>(Minimal Super Keys)</i>"]
-    PK["<b>Primary Key</b><br/><i>(Selected Unique Identifier)</i>"]
-    AK["<b>Alternate Keys</b><br/><i>(Non-selected Candidate Keys)</i>"]
-
-    SK --> CK
-    CK --> PK
-    CK --> AK
-```
-
-* **Super Key:** Any set of one or more attributes that collectively identifies a unique tuple in a relation.
-* **Candidate Key:** A minimal Super Key—a super key from which no attribute can be removed without losing unique identification.
-* **Primary Key (PK):** The candidate key selected by the database designer to uniquely identify tuples. Cannot contain `NULL` values.
-* **Alternate Key:** Any candidate key that was not chosen as the primary key.
-* **Foreign Key (FK):** An attribute (or set of attributes) in one relation that references the Primary Key of another relation, enforcing **Referential Integrity**.
-
----
-
 ## 2. Weak Entities & Identifying Relations
 
 A **Weak Entity** cannot be uniquely identified by its own attributes alone and depends on a **Strong (Owner) Entity** for its identity and existence.
 
 ```mermaid
 flowchart LR
-    Owner["<b>Strong Entity</b><br/>Employee<br/><u>EmpID</u>"] === IdRel{"<b>Identifying Rel.</b><br/>Has"}
+    Owner["<b>Strong Entity</b><br/>Employee<br/><u>EmpID</u>"] --- IdRel{"<b>Identifying Rel.</b><br/>Has"}
     IdRel === Weak["<b>Weak Entity</b><br/>Dependent<br/><i>DependentName</i>"]
 ```
 
@@ -107,13 +83,13 @@ flowchart LR
 
 #### 1. Reading Right-to-Left (`Employee` $\rightarrow$ `Department`)
 
-* **Target Constraints:** Double Line (`===`) $\rightarrow$ **Total Participation** | Cardinality $\rightarrow$ **1**
+* **Target Constraints:** Double Line $\rightarrow$ **Total Participation** | Cardinality $\rightarrow$ **1**
 * **Verbal Rule:** *"Every **Employee** MUST (Total) work in EXACTLY ONE (1) **Department**."*
 * **Database Implementation:** The Foreign Key `DeptID` in the `Employee` table is strictly enforced as **`NOT NULL`**.
 
 #### 2. Reading Left-to-Right (`Department` $\rightarrow$ `Employee`)
 
-* **Target Constraints:** Single Line (`---`) $\rightarrow$ **Partial Participation** | Cardinality $\rightarrow$ **N**
+* **Target Constraints:** Single Line $\rightarrow$ **Partial Participation** | Cardinality $\rightarrow$ **N**
 * **Verbal Rule:** *"A **Department** MAY (Partial) have ZERO OR MANY (N) **Employees**."*
 * **Database Implementation:** A new department record can exist in the database without any linked employee records.
 
