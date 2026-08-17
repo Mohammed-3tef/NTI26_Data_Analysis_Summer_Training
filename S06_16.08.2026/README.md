@@ -12,12 +12,12 @@ Understanding the organizational hierarchy is essential for object qualification
 flowchart TD
     DB["<b>Database</b><br/>Top-level container holding storage files, transactional logs, and security scope."]
     
-    DB --> S1["<b>Schema A (e.g., sales)</b><br/>Logical namespace grouping related tables, views, and procedures."]
-    DB --> S2["<b>Schema B (e.g., hr)</b><br/>Logical namespace providing isolated access boundaries."]
+    DB --> S1["<b>Schema A (e.g., Sales)</b><br/>Logical namespace grouping related tables, views, and procedures."]
+    DB --> S2["<b>Schema B (e.g., HR)</b><br/>Logical namespace providing isolated access boundaries."]
     
-    S1 --> T1["<b>Table: orders</b><br/>Physical/logical structure of rows and typed columns."]
-    S1 --> T2["<b>Table: customers</b><br/>Physical/logical structure of rows and typed columns."]
-    S2 --> T3["<b>Table: employees</b><br/>Physical/logical structure of rows and typed columns."]
+    S1 --> T1["<b>Table: Orders</b><br/>Physical/logical structure of rows and typed columns."]
+    S1 --> T2["<b>Table: Customers</b><br/>Physical/logical structure of rows and typed columns."]
+    S2 --> T3["<b>Table: Employees</b><br/>Physical/logical structure of rows and typed columns."]
 ```
 
 ### Architectural Comparison Matrix
@@ -27,6 +27,38 @@ flowchart TD
 | **Database** | The outermost physical and logical container managed by a Database Management System (DBMS). Holds configuration, transactional logs, and schemas. | Security isolation, disaster recovery unit, backup/restore boundary. | `DatabaseName` | **The Entire Building** |
 | **Schema** | A logical partition or namespace inside a database that groups related objects (tables, views, indexes, stored procedures). | Access control, namespace isolation, preventing naming collisions across modules. | `DatabaseName.SchemaName` | **An Individual Floor / Department** |
 | **Table** | A structured data object composed of fixed columns (attributes with declared data types) and dynamic rows (records). | Storing actual relational data instances and enforcing constraints (PK, FK, CHECK). | `DatabaseName.SchemaName.TableName` | **A Filing Cabinet on that Floor** |
+
+### Example
+
+```sql
+-- 1. Create the top-level Database container
+CREATE DATABASE EnterpriseDB;
+GO
+
+USE EnterpriseDB;
+GO
+
+-- 2. Create distinct Schema namespaces for logical isolation
+CREATE SCHEMA Sales;
+GO
+CREATE SCHEMA HR;
+GO
+
+-- 3. Create Tables inside their respective schemas using Fully Qualified Names (FQN)
+CREATE TABLE EnterpriseDB.Sales.Orders (
+    OrderId INT PRIMARY KEY IDENTITY(1,1),
+    CustomerId INT NOT NULL,
+    OrderDate DATE NOT NULL,
+    TotalAmount DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE EnterpriseDB.HR.Employees (
+    EmployeeId INT PRIMARY KEY IDENTITY(1,1),
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Salary DECIMAL(10,2) NOT NULL
+);
+```
 
 ---
 
@@ -53,14 +85,14 @@ flowchart LR
 
 | Clause | Logical Order | Core Function | Valid Expression Constraints | Operational Example |
 | --- | --- | --- | --- | --- |
-| **`FROM`** | **1** | Specifies the source table(s) to read and establishes join logic. | Defines table references and aliases. | `FROM sales.orders AS o` |
-| **`WHERE`** | **2** | Filters individual rows **before** any grouping or aggregation occurs. | **Cannot** contain aggregate functions (e.g., `WHERE SUM(price) > 100` is invalid). | `WHERE o.status = 'COMPLETED'` |
-| **`GROUP BY`** | **3** | Collapses multiple rows sharing identical values in specified columns into aggregate summary rows. | Every non-aggregated column in `SELECT` **must** be listed in `GROUP BY`. | `GROUP BY o.region, o.category` |
-| **`HAVING`** | **4** | Filters group buckets **after** aggregation has taken place. | Can reference aggregate functions directly (e.g., `HAVING COUNT(*) > 5`). | `HAVING SUM(o.total) >= 1000` |
-| **`SELECT`** | **5** | Computes output expressions, projects specified columns, and assigns column aliases. | Aliases created here are **not accessible** in `WHERE` or `GROUP BY`. | `SELECT o.region, SUM(o.total) AS sales` |
-| **`DISTINCT`** | **6** | Eliminates duplicate rows across all projected columns in the result set. | Evaluated after expressions in `SELECT` are evaluated. | `SELECT DISTINCT o.customer_id` |
-| **`ORDER BY`** | **7** | Sorts the final result set by one or more columns or expressions (`ASC` or `DESC`). | **Can** reference column aliases created in the `SELECT` phase. | `ORDER BY sales DESC, o.region ASC` |
-| **`TOP` / `LIMIT`** | **8** | Truncates the result set to return only a specified maximum number or percentage of rows. | Applied as the absolute final operation on the sorted set. | SQL Server: `SELECT TOP 10`<br>PostgreSQL/MySQL: `LIMIT 10` |
+| **`FROM`** | **1** | Specifies the source table(s) to read and establishes join logic. | Defines table references and aliases. | `FROM Sales.Orders AS o` |
+| **`WHERE`** | **2** | Filters individual rows **before** any grouping or aggregation occurs. | **Cannot** contain aggregate functions (e.g., `WHERE SUM(Price) > 100` is invalid). | `WHERE o.Status = 'COMPLETED'` |
+| **`GROUP BY`** | **3** | Collapses multiple rows sharing identical values in specified columns into aggregate summary rows. | Every non-aggregated column in `SELECT` **must** be listed in `GROUP BY`. | `GROUP BY o.Region, o.Category` |
+| **`HAVING`** | **4** | Filters group buckets **after** aggregation has taken place. | Can reference aggregate functions directly (e.g., `HAVING COUNT(*) > 5`). | `HAVING SUM(o.Total) >= 1000` |
+| **`SELECT`** | **5** | Computes output expressions, projects specified columns, and assigns column aliases. | Aliases created here are **not accessible** in `WHERE` or `GROUP BY`. | `SELECT o.Region, SUM(o.Total) AS TotalSales` |
+| **`DISTINCT`** | **6** | Eliminates duplicate rows across all projected columns in the result set. | Evaluated after expressions in `SELECT` are evaluated. | `SELECT DISTINCT o.CustomerId` |
+| **`ORDER BY`** | **7** | Sorts the final result set by one or more columns or expressions (`ASC` or `DESC`). | **Can** reference column aliases created in the `SELECT` phase. | `ORDER BY TotalSales DESC, o.Region ASC` |
+| **`TOP` / `LIMIT`** | **8** | Truncates the result set to return only a specified maximum number or percentage of rows. | Applied as the absolute final operation on the sorted set. | SQL Server: `SELECT TOP 10`<br> PostgreSQL/MySQL: `LIMIT 10` |
 
 ---
 
@@ -70,19 +102,19 @@ flowchart LR
 
 * **Definition:** Range operator used in `WHERE` or `HAVING` clauses to filter values within an inclusive range.
 * **Inclusive Nature:** Equivalent to `expression >= low AND expression <= high`.
-* **Syntax:** `column BETWEEN low_value AND high_value`
-* **Edge Case (`NULL` handling):** If `column`, `low_value`, or `high_value` is `NULL`, the expression evaluates to `UNKNOWN` and excludes the row.
+* **Syntax:** `Column BETWEEN LowValue AND HighValue`
+* **Edge Case (`NULL` handling):** If `Column`, `LowValue`, or `HighValue` is `NULL`, the expression evaluates to `UNKNOWN` and excludes the row.
 
 ```sql
 -- Inclusive range filter for dates
-WHERE order_date BETWEEN '2026-01-01' AND '2026-06-30'
+WHERE OrderDate BETWEEN '2026-01-01' AND '2026-06-30'
 ```
 
 #### 2. `DISTINCT` Modifier
 
 * **Definition:** Removes identical duplicate rows from the query output.
 * **Scope:** Applies to the **entire row context** defined in the `SELECT` clause, not just a single column.
-* **Syntax:** `SELECT DISTINCT column1, column2 FROM schema.table`
+* **Syntax:** `SELECT DISTINCT Column1, Column2 FROM Schema.Table`
 * **`NULL` Behavior:** Treats all `NULL` values as identical duplicates and groups them into a single `NULL` output row.
 
 #### 3. `TOP` vs `LIMIT` (Dialect Dialectics)
@@ -95,6 +127,23 @@ WHERE order_date BETWEEN '2026-01-01' AND '2026-06-30'
 | **Placement in SQL** | Placed inside `SELECT` (e.g., `SELECT TOP 5 ...`) | Placed at the very end of the query (e.g., `... LIMIT 5`) |
 | **Tie Handling** | Supports `TOP N WITH TIES` (requires `ORDER BY`). | Requires `FETCH FIRST N ROWS WITH TIES` (ANSI SQL standard). |
 
+### Example
+
+```sql
+-- Query demonstrating ALL 8 logical processing steps
+SELECT TOP 5                             -- 8. Truncates final output to top 5 rows
+    DISTINCT                             -- 6. Deduplicates resulting rows (after SELECT)
+    o.CustomerId,                        -- 5. Projects columns & computes aggregate aliases
+    COUNT(o.OrderId) AS CompletedOrders,
+    SUM(o.TotalAmount) AS TotalSpent
+FROM EnterpriseDB.Sales.Orders AS o      -- 1. Identifies source table
+WHERE o.Status = 'COMPLETED'             -- 2. Filters raw rows before grouping
+  AND o.OrderDate BETWEEN '2026-01-01' AND '2026-06-30'
+GROUP BY o.CustomerId                   -- 3. Groups remaining rows into customer buckets
+HAVING SUM(o.TotalAmount) >= 1000.00    -- 4. Filters aggregated group buckets
+ORDER BY TotalSpent DESC;               -- 7. Sorts final result set using SELECT alias
+```
+
 ---
 
 ## 3. SQL Aggregate Functions
@@ -105,19 +154,19 @@ Aggregate functions perform a calculation on a set of values and return a single
 
 | Function | Output Data Type | Supported Data Types | `NULL` Handling Behavior | Primary Use Case | Example Usage |
 | --- | --- | --- | --- | --- | --- |
-| **`COUNT`** | Integer | All types | **`COUNT(*)`:** Counts all rows.<br> **`COUNT(col)`:** Ignores `NULL` values. | Counting total records or populated attributes. | `COUNT(order_id)` |
-| **`SUM`** | Numeric / Decimal / Integer | Numeric types only | Ignores `NULL`s completely. Returns `NULL` if all inputs are `NULL`. | Calculating running or total totals. | `SUM(order_amount)` |
-| **`AVG`** | Floating-point / Numeric | Numeric types only | Ignores `NULL`s. Evaluates as $\frac{\text{SUM(non-null)}}{\text{COUNT(non-null)}}$. | Calculating arithmetic mean. | `AVG(unit_price)` |
-| **`MIN`** | Matches Input Type | Numeric, String, Date/Time | Ignores `NULL`s. Evaluates alphabetic, chronological, or numeric minimum. | Finding earliest date, lowest price, or first alphabetically. | `MIN(order_date)` |
-| **`MAX`** | Matches Input Type | Numeric, String, Date/Time | Ignores `NULL`s. Evaluates alphabetic, chronological, or numeric maximum. | Finding latest date, peak revenue, or last alphabetically. | `MAX(salary)` |
+| **`COUNT`** | Integer | All types | **`COUNT(*)`:** Counts all rows.<br> **`COUNT(col)`:** Ignores `NULL` values. | Counting total records or populated attributes. | `COUNT(OrderId)` |
+| **`SUM`** | Numeric / Decimal / Integer | Numeric types only | Ignores `NULL`s completely. Returns `NULL` if all inputs are `NULL`. | Calculating running or total totals. | `SUM(OrderAmount)` |
+| **`AVG`** | Floating-point / Numeric | Numeric types only | Ignores `NULL`s. Evaluates as $\frac{\text{SUM(non-null)}}{\text{COUNT(non-null)}}$. | Calculating arithmetic mean. | `AVG(UnitPrice)` |
+| **`MIN`** | Matches Input Type | Numeric, String, Date/Time | Ignores `NULL`s. Evaluates alphabetic, chronological, or numeric minimum. | Finding earliest date, lowest price, or first alphabetically. | `MIN(OrderDate)` |
+| **`MAX`** | Matches Input Type | Numeric, String, Date/Time | Ignores `NULL`s. Evaluates alphabetic, chronological, or numeric maximum. | Finding latest date, peak revenue, or last alphabetically. | `MAX(Salary)` |
 
 ---
 
 ### Critical Nuances: `COUNT(*)` vs `COUNT(column)` vs `COUNT(DISTINCT column)`
 
-Given a sample dataset `orders`:
+Given a sample dataset `Orders`:
 
-| order_id | customer_id | discount_code |
+| OrderId | CustomerId | DiscountCode |
 | --- | --- | --- |
 | 101 | C1 | `NULL` |
 | 102 | C1 | `SUMMER20` |
@@ -126,11 +175,11 @@ Given a sample dataset `orders`:
 
 ```sql
 SELECT 
-    COUNT(*) AS total_rows,                    -- Result: 4 (Counts all physical rows)
-    COUNT(customer_id) AS total_customers,     -- Result: 3 (Ignores NULL in row 104)
-    COUNT(discount_code) AS total_discounts,   -- Result: 2 (Ignores NULLs in rows 101, 104)
-    COUNT(DISTINCT customer_id) AS unique_cust -- Result: 2 (Evaluates distinct non-null values: 'C1', 'C2')
-FROM sales.orders;
+    COUNT(*) AS TotalRows,                    -- Result: 4 (Counts all physical rows)
+    COUNT(CustomerId) AS TotalCustomers,      -- Result: 3 (Ignores NULL in row 104)
+    COUNT(DiscountCode) AS TotalDiscounts,    -- Result: 2 (Ignores NULLs in rows 101, 104)
+    COUNT(DISTINCT CustomerId) AS UniqueCust  -- Result: 2 (Evaluates distinct non-null values: 'C1', 'C2')
+FROM Sales.Orders;
 ```
 
 ---
@@ -139,9 +188,9 @@ FROM sales.orders;
 
 An annotated, multi-clause query demonstrating exact logical execution flow combining all clauses, range filtering, aggregate calculations, and grouping constraints.
 
-### Source Data: `sales.order_items`
+### Source Data: `Sales.OrderItems`
 
-| item_id | store_id | category | status | unit_price | quantity |
+| ItemId | StoreId | Category | Status | UnitPrice | Quantity |
 | --- | --- | --- | --- | --- | --- |
 | 1 | S01 | Electronics | COMPLETED | 500.00 | 2 |
 | 2 | S01 | Electronics | COMPLETED | 150.00 | 1 |
@@ -157,47 +206,52 @@ An annotated, multi-clause query demonstrating exact logical execution flow comb
 
 ```sql
 SELECT TOP 2
-    store_id,
-    category,
-    COUNT(item_id) AS items_sold,
-    SUM(unit_price * quantity) AS total_revenue,
-    AVG(unit_price) AS avg_unit_price
-FROM sales.order_items
-WHERE status = 'COMPLETED' 
-  AND unit_price BETWEEN 40.00 AND 900.00
-GROUP BY store_id, category
-HAVING SUM(unit_price * quantity) >= 500.00
-ORDER BY total_revenue DESC;
+    StoreId,
+    Category,
+    COUNT(ItemId) AS ItemsSold,
+    SUM(UnitPrice * Quantity) AS TotalRevenue,
+    AVG(UnitPrice) AS AvgUnitPrice
+FROM Sales.OrderItems
+WHERE Status = 'COMPLETED' 
+  AND UnitPrice BETWEEN 40.00 AND 900.00
+GROUP BY StoreId, Category
+HAVING SUM(UnitPrice * Quantity) >= 500.00
+ORDER BY TotalRevenue DESC;
 ```
 
 ---
 
 ### Step-by-Step Logical Engine Execution
 
-1. **`FROM sales.order_items`**: Loads source table containing 7 total records.
-2. **`WHERE status = 'COMPLETED' AND unit_price BETWEEN 40.00 AND 900.00`**:
-    * Filters out `CANCELLED` status (removes row 4).
-    * Filters out `unit_price` outside inclusive range $[40.00, 900.00]$ (all remaining rows 1, 2, 3, 5, 6, 7 pass).
+1. **`FROM Sales.OrderItems`**: Loads source table containing 7 total records.
+2. **`WHERE Status = 'COMPLETED' AND UnitPrice BETWEEN 40.00 AND 900.00`**:
+* Filters out `CANCELLED` status (removes row 4).
+* Filters out `UnitPrice` outside inclusive range $[40.00, 900.00]$ (all remaining rows 1, 2, 3, 5, 6, 7 pass).
 
-3. **`GROUP BY store_id, category`**: Collapses remaining rows into unique composite groups:
-    * Group A: `(S01, Electronics)` $\rightarrow$ Rows 1, 2
-    * Group B: `(S01, Apparel)` $\rightarrow$ Row 3
-    * Group C: `(S02, Electronics)` $\rightarrow$ Rows 5, 7
-    * Group D: `(S02, Apparel)` $\rightarrow$ Row 6
 
-4. **`HAVING SUM(unit_price * quantity) >= 500.00`**:
-    * Group A revenue: $(500\times2) + (150\times1) = 1150.00$ ($\ge 500$, **Kept**)
-    * Group B revenue: $40\times5 = 200.00$ ($< 500$, **Discarded**)
-    * Group C revenue: $(300\times3) + (800\times1) = 1700.00$ ($\ge 500$, **Kept**)
-    * Group D revenue: $50\times2 = 100.00$ ($< 500$, **Discarded**)
+3. **`GROUP BY StoreId, Category`**: Collapses remaining rows into unique composite groups:
+* Group A: `(S01, Electronics)` $\rightarrow$ Rows 1, 2
+* Group B: `(S01, Apparel)` $\rightarrow$ Row 3
+* Group C: `(S02, Electronics)` $\rightarrow$ Rows 5, 7
+* Group D: `(S02, Apparel)` $\rightarrow$ Row 6
+
+
+4. **`HAVING SUM(UnitPrice * Quantity) >= 500.00`**:
+* Group A revenue: $(500\times2) + (150\times1) = 1150.00$ ($\ge 500$, **Kept**)
+* Group B revenue: $40\times5 = 200.00$ ($< 500$, **Discarded**)
+* Group C revenue: $(300\times3) + (800\times1) = 1700.00$ ($\ge 500$, **Kept**)
+* Group D revenue: $50\times2 = 100.00$ ($< 500$, **Discarded**)
+
 
 5. **`SELECT`**: Evaluates expressions and projects columns for remaining Groups A and C:
-    * Group C: `items_sold` = 2, `total_revenue` = 1700.00, `avg_unit_price` = 550.00
-    * Group A: `items_sold` = 2, `total_revenue` = 1150.00, `avg_unit_price` = 325.00
+* Group C: `ItemsSold` = 2, `TotalRevenue` = 1700.00, `AvgUnitPrice` = 550.00
+* Group A: `ItemsSold` = 2, `TotalRevenue` = 1150.00, `AvgUnitPrice` = 325.00
 
-6. **`ORDER BY total_revenue DESC`**: Sorts group outputs descending:
-    * Row 1: Group C (`total_revenue` = 1700.00)
-    * Row 2: Group A (`total_revenue` = 1150.00)
+
+6. **`ORDER BY TotalRevenue DESC`**: Sorts group outputs descending:
+* Row 1: Group C (`TotalRevenue` = 1700.00)
+* Row 2: Group A (`TotalRevenue` = 1150.00)
+
 
 7. **`TOP 2`**: Restricts output to the top 2 sorted records.
 
@@ -205,7 +259,7 @@ ORDER BY total_revenue DESC;
 
 ### Final Output Result Set
 
-| store_id | category | items_sold | total_revenue | avg_unit_price |
+| StoreId | Category | ItemsSold | TotalRevenue | AvgUnitPrice |
 | --- | --- | --- | --- | --- |
 | S02 | Electronics | 2 | 1700.00 | 550.00 |
 | S01 | Electronics | 2 | 1150.00 | 325.00 |
