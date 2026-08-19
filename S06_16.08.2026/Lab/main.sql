@@ -3,7 +3,7 @@
 * Date         : 16.08.2026
 * Author       : Mohammed Atef
 * Organization : NTI (National Telecommunication Institute)
-* Note         : You should run PracticeDB.sql & before running this script.
+* Note         : You should run PracticeDB.sql before running this script.
 *******************************************************************************/
 
 USE PracticeDB;

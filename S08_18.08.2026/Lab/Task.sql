@@ -3,7 +3,8 @@
 * Date         : 18.08.2026
 * Author       : Mohammed Atef
 * Organization : NTI (National Telecommunication Institute)
-* Note         : Run PracticeDB.sql, Task1_data.sql, Task2_data.sql, and database_update.sql
+* Note         : Run PracticeDB.sql (from session 6), Task1_data.sql (from session 7), 
+                 Task2_data.sql (from session 7), and database_update.sql
                  in sequence before executing this script.
 *******************************************************************************/
 USE PracticeDB;
