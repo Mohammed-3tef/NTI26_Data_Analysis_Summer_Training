@@ -1,3 +1,88 @@
+# Descriptive Statistics Fundamentals: Central Tendency, Spread & Outliers
+
+Descriptive statistics summarize and characterize the distribution of a dataset. Understanding central tendency, spread, and outlier boundaries is the foundation for data pre-processing and exploratory analysis prior to model building or hypothesis testing.
+
+---
+
+## 1. Summary of Statistical Measures
+
+| Measure | Category | Mathematical Definition / Calculation | Sensitivity to Outliers | Primary Use Case |
+| --- | --- | --- | --- | --- |
+| **Mean ($\mu$ or $\bar{x}$)** | Central Tendency | $\frac{1}{N} \sum_{i=1}^{N} x_i$ | **High** | Symmetric distributions with no extreme values. |
+| **Median ($Q_2$)** | Central Tendency | Middle value of sorted data: $x_{\frac{N+1}{2}}$ (odd) or $\frac{x_{\frac{N}{2}} + x_{\frac{N}{2}+1}}{2}$ (even) | **Low (Robust)** | Skewed distributions or data with extreme outliers. |
+| **Mode** | Central Tendency | $\arg\max_x (\text{Frequency}(x))$ | **Low (Robust)** | Categorical data or identifying multi-modal distributions. |
+| **Quartiles ($Q_1, Q_2, Q_3$)** | Position / Spread | $Q_1 = 25\text{th}$, $Q_2 = 50\text{th}$, $Q_3 = 75\text{th}$ percentiles | **Low (Robust)** | Segmenting data into four equal-frequency quarters. |
+| **Interquartile Range (IQR)** | Dispersion / Spread | $\text{IQR} = Q_3 - Q_1$ | **Low (Robust)** | Measuring middle-50% spread; building boxplots. |
+| **Outlier Thresholds** | Data Quality | $[\text{Fence}_{\text{low}}, \text{Fence}_{\text{high}}] = [Q_1 - 1.5 \cdot \text{IQR}, Q_3 + 1.5 \cdot \text{IQR}]$ | **N/A** | Automated detection and filtering of structural anomalies. |
+
+---
+
+## 2. Core Formulas & Concepts
+
+### Measures of Central Tendency
+
+* **Mean:** The arithmetic average. Highly sensitive to skewed values because every data point contributes equally to the total sum.
+* **Median ($Q_2$):** The midpoint value dividing a sorted dataset into equal halves. Because it depends only on relative rank rather than magnitude, extreme values at the tail do not shift it.
+* **Mode:** The value(s) appearing with the highest frequency. A dataset can be unimodal, bimodal, multimodal, or have no mode.
+
+### Measures of Spread & Positional Quartiles
+
+* **First Quartile ($Q_1$):** The 25th percentile; 25% of data falls below this point.
+* **Second Quartile ($Q_2$):** The 50th percentile (Median); divides the dataset in half.
+* **Third Quartile ($Q_3$):** The 75th percentile; 75% of data falls below this point.
+* **Interquartile Range ($\text{IQR}$):** The distance between the 75th and 25th percentiles ($\text{IQR} = Q_3 - Q_1$). Represents the range of the central 50% of the data, completely ignoring extreme outer tails.
+
+### Outlier Detection (Tukey's Fences Rule)
+
+Values strictly outside the non-outlier range are defined as outliers:
+
+* **Lower Fence:** $Q_1 - 1.5 \times \text{IQR}$
+* **Upper Fence:** $Q_3 + 1.5 \times \text{IQR}$
+
+---
+
+## 3. Python Reference Implementation
+
+Using pure Python standard library and standard numerical libraries (`numpy`, `scipy`):
+
+```python
+import numpy as np
+from scipy import stats
+
+data = np.array([12, 15, 14, 10, 8, 12, 14, 15, 110, 13, 14, 11])
+
+# 1. Central Tendency
+mean_val = np.mean(data)
+median_val = np.median(data)
+mode_res = stats.mode(data, keepdims=True)
+mode_val = mode_res.mode[0]
+
+# 2. Quartiles (Method: linear interpolation / standard percentile)
+q1 = np.percentile(data, 25)
+q3 = np.percentile(data, 75)
+
+# 3. Interquartile Range (IQR)
+iqr = q3 - q1  # or stats.iqr(data)
+
+# 4. Outlier Bounds (Tukey's Fences)
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+
+# 5. Extract Outliers
+outliers = data[(data < lower_bound) | (data > upper_bound)]
+
+print(f"Mean: {mean_val:.2f}")
+print(f"Median: {median_val:.2f}")
+print(f"Mode: {mode_val}")
+print(f"Q1 (25th percentile): {q1:.2f}")
+print(f"Q3 (75th percentile): {q3:.2f}")
+print(f"IQR: {iqr:.2f}")
+print(f"Valid Range: [{lower_bound:.2f}, {upper_bound:.2f}]")
+print(f"Detected Outliers: {outliers}")
+```
+
+---
+
 # Pandas Fundamentals, Indexing, Alignment & Data Cleaning Cheat Sheet
 
 A comprehensive technical reference covering pandas Series/DataFrame construction, structural attributes, label- vs. position-based indexing, reshaping and concatenation, aligned vectorized arithmetic, NaN-safe aggregation, boolean masking, and end-to-end data cleaning.
